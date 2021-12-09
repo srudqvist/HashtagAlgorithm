@@ -7,15 +7,14 @@
 # Modification Log:
 #   - 2021.12.09 - LG - Added header and started design.
 
-print("test")
+
 def test_input():
   file = open("short_input.csv", "r", encoding='utf-8-sig')
-  print("here")
   for line in file:
     print(line)
 
   file.close()
 
-print("Testing")
-test_input()
-print("Testing 2")
+
+if __name__ == "__main__":
+  test_input()
