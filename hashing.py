@@ -6,16 +6,23 @@
 #          upgrade final project.
 # Modification Log:
 #   - 2021.12.09 - LG - Added header and started design.
+#   - 2021.12.09 - RN - Started on hash function.
 #   - 2021.12.10 - LG - Added the HashedItem class and documentation
 #                       for the class. Also added constants.
 #   - 2021.12.10 - SR - Started user interface. 
 #   - 2021.12.10 - LG & SR - Implemented __init__, hash, and add_tweet
 #                            methods for the Hashing class.
+#   - 2021.12.11 - RN & LG - Debug and cleaning up UI
+#   - 2021.12.11 - RN - Implemented tweet_search method.
+#   - 2021.12.11 - Rn & SR - Finished tweet_search method.
+#   - 2021.12.11 - RN & SR - Addded error handling for empty hashtag,
+#                            removes the hashtag from the input.
+
 
 
 # Constants
 MOD = 11 # Mod factor for the hashing algorithm.
-INPUT_FILE = 'short_input.csv' # Input file for tweets.
+INPUT_FILE = 'hashtagList.csv' # Input file for tweets.
 
 # HashedItem - A class to hold the text of a tweet, a hashtag, and
 #              the pointer to the next hashedItem in the stack.
@@ -52,15 +59,16 @@ class Hashing:
   #     input_file - The .CSV file that is used for input.
   def __init__(self, input_file):
     # Create the self.table with the mod number of spaces.
+    self.table = []
     for i in range(MOD):
       self.table.append(None)
     
-    # Opens the file and pulls all lines out to put into the hash table.
+    # Opens the file and pulls all lines out to put into the hash 
+    # table.
     with open(input_file, "r") as file:
-      lines = file.readLines()
-      
-      # For each of the lines in the file, add them to the hash table. 
-      for line in lines:
+      # For each of the lines in the file, add them to the hash 
+      # table. 
+      for line in file:
         hashtag, tweet = line.split(",")
         self.add_tweet(tweet, hashtag)
   
@@ -70,6 +78,8 @@ class Hashing:
   #   Parameters:
   #     self - Instance for the object.
   #     hashtag - The hashtag from the tweet.
+  #   
+  #   Return - 
   def hash(self, hashtag):
     # Start the accumulator.
     hashed_val = 0
@@ -92,44 +102,113 @@ class Hashing:
   def add_tweet(self, tweet_text, hashtag):
     # Calculate the hash table position.
     position = self.hash(hashtag)
-    
     #Check to see if the table position is already taken. 
-    if self.table[position] == None:
+    if self.table[position] != None:
       # Find the next open position in this column of the table
+      previous = self.table[position - 1]
       item = self.table[position]
-      while item.next_pointer != None:
+      
+      while item != None:
+        previous = item
         item = item.next_pointer
         # Assign the open pointer to the new tweet.
-      item.next_pointer = HashedItem(tweet_text, hashtag)
+      previous.next_pointer = HashedItem(tweet_text, hashtag)
     else:  
       # Nothing is in the table at the position so add the tweet there.
       self.table[position] = HashedItem(tweet_text, hashtag)
       
-  # TODO: Searching the hash table
-  # TODO: Adding to hash table
+
+  # tweet_search() - Searches the hash table for the input hashtag.
+  #
+  #   Parameters:
+  #     self - Instance for the object.
+  #     hashtag - The hashtag from the tweet
+  
+  def tweet_search(self, hashtag):
+    #place holder for list of hashtags
+    list_hold = []
+    #finds mod value for hashtag searched
+    hashtag_val = self.hash(hashtag)
+    #finds the area where the hashtag looks and adds every hashtag and its pointer to the list.
+    item = self.table[hashtag_val]
+    while item.next_pointer != None:
+      if item.hashtag == hashtag:
+        list_hold.append(item)
+        item = item.next_pointer
+    if item.hashtag == hashtag:
+      list_hold.append(item)
+    #return list of hashtag items
+    return list_hold
+
+
+
+    
+
+
 
 # user_interface() - This is what the user will interact with when 
 #                    using this application.
-def user_interface(restarted=False):
-  #Initialize hashing class
+#
+#   Parameters:
+#     twitter - Initializing the application.
+#     restarted=False - Set the restarded variable to false for the
+#                       sake of restarting the application.
+def user_interface(twitter, restarted=False):
+  #prints welcome if first booted.
   if(restarted == False):
-    twitter = Hashing(INPUT_FILE)
-
-  print("\nWelcome to Open Hashed Twitter\n\nFunctions availble: ")
-  print("   Add new tweet (A)\n   Search for hashtag (S)\n")
+    print("\nWelcome to Open Hashed Twitter")
+  #prints options
+  print("\nFunctions availble:\n\tAdd new tweet (A)\n\tSearch for hashtag (S)\n")
 
   user_input = input("What would you like to do? (A/S) ").upper()
-
+  #if the user wants to add a tweet
   if user_input == "A":
-    pass
-  elif user_input == "S":
-    pass
-  else:
-    restart = input("\nIncorrect input.\nWould you like to restart? (Y/N) ")
-    if restart.upper() == "Y":
-      user_interface(True)
+    new_tweet_input = str(input("What text would you like? "))
+    new_hashtag_input = str(input("What hashtag would you like? "))
+    #if the new tweet or hashtag is empty, skip. 
+    if new_hashtag_input == "#" or new_hashtag_input == "":
+      print("The hashtag must have characters in it.")
+    elif new_tweet_input == '':
+      print("The tweet must contain characters")
+    # remove the hashtag to not interfer with mod val  
+    elif "#" in new_hashtag_input:
+      splitted = new_hashtag_input.split('#')
+      new_hashtag_input = str(splitted[1])
+      twitter.add_tweet(new_tweet_input, new_hashtag_input)
+    #if everything is good, just run function
     else:
-      print("\nEnding Execution")
+      twitter.add_tweet(new_tweet_input, new_hashtag_input)
+
+  #if the user trys to search, take a input for the hashtag
+  elif user_input == "S":
+    hashtag_input = str(input("What would you like to search? "))
+    #skips function if there is only a poundsign or its empty
+    if hashtag_input == "#" or hashtag_input == "":
+      print("The hashtag must have charaters in it.")
+    #removes # in input
+    elif "#" in hashtag_input:
+      splitted = hashtag_input.split('#')
+      hashtag_input = str(splitted[1])
+      tweet_list = twitter.tweet_search(hashtag_input)
+      for tweet in tweet_list:
+        print(tweet.tweet)
+    #if everyint is fine, run function and print every tweet.
+    else:
+      tweet_list = twitter.tweet_search(hashtag_input)
+      for tweet in tweet_list:
+        print(tweet.tweet)
+  #if user does not use a or s, error
+  else:
+    print("\nIncorrect input.")
+    
+  #restart function with saved memeory
+  restart = input("\nWould you like to restart? (Y/N) ")
+  if restart.upper() == "Y":
+    user_interface(twitter, True)
+  else:
+    print("\nEnding Execution")
+
 
 if __name__ == "__main__":
-  user_interface()
+  twitter = Hashing(INPUT_FILE)
+  user_interface(twitter)

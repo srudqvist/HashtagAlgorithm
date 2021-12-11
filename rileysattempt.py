@@ -26,7 +26,10 @@ def hashascii():
             number = number + ord(charecter)
         number = number%mod
         x.number = number
+        print(number)
     return objectList
+  
+hashascii()
 
 def listOfLists():
     objectList = hashascii()
