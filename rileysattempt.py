@@ -45,10 +45,9 @@ def listOfLists():
 
 
 
-
+twitterList = listOfLists()
 
 def findTweet(hashtag):
-    twitterList = listOfLists()
     holdingList=[]
     number = 0
     for charecter in hashtag:
@@ -62,10 +61,13 @@ def findTweet(hashtag):
         
 def writeTweet(newhashtag, newtweet):
     new = Hashtag(newhashtag, newtweet)
-    objectList = listOfLists()
     number = 0
     for charecter in new.hashtag:
         number =number + ord(charecter)
+    number = number % mod
+    new.number=number
+    twitterList[number].append(new)
+    
     
 
 
