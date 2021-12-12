@@ -17,8 +17,9 @@
 #   - 2021.12.11 - Rn & SR - Finished tweet_search method.
 #   - 2021.12.11 - RN & SR - Addded error handling for empty hashtag,
 #                            removes the hashtag from the input.
-
-
+#   - 2021.12.11 - RN & SR - Fixed issue of searching for nonexistent hashtag
+#                            when list exists.
+#   - 2021.12.12 - SR - Implemented testing for adding a tweet.
 
 # Constants
 MOD = 11 # Mod factor for the hashing algorithm.
@@ -70,7 +71,7 @@ class Hashing:
       # table. 
       for line in file:
         hashtag, tweet = line.split(",")
-        self.add_tweet(tweet, hashtag)
+        self.add_tweet(tweet, hashtag.upper())
   
   # hash() - Creates the modded hash value for the hashtag so that
   #          it can be stored in the right place.
@@ -131,13 +132,16 @@ class Hashing:
     hashtag_val = self.hash(hashtag)
     #finds the area where the hashtag looks and adds every hashtag and its pointer to the list.
     item = self.table[hashtag_val]
-    while item.next_pointer != None:
+    if item != None:
+      while item.next_pointer != None:
+        if item.hashtag == hashtag:
+          list_hold.append(item)
+        item = item.next_pointer
       if item.hashtag == hashtag:
         list_hold.append(item)
-        item = item.next_pointer
-    if item.hashtag == hashtag:
-      list_hold.append(item)
     #return list of hashtag items
+    if list_hold == []:
+      print("No results found")
     return list_hold
 
 
@@ -164,7 +168,7 @@ def user_interface(twitter, restarted=False):
   #if the user wants to add a tweet
   if user_input == "A":
     new_tweet_input = str(input("What text would you like? "))
-    new_hashtag_input = str(input("What hashtag would you like? "))
+    new_hashtag_input = str(input("What hashtag would you like? ")).upper()
     #if the new tweet or hashtag is empty, skip. 
     if new_hashtag_input == "#" or new_hashtag_input == "":
       print("The hashtag must have characters in it.")
@@ -181,7 +185,7 @@ def user_interface(twitter, restarted=False):
 
   #if the user trys to search, take a input for the hashtag
   elif user_input == "S":
-    hashtag_input = str(input("What would you like to search? "))
+    hashtag_input = str(input("What would you like to search? ")).upper()
     #skips function if there is only a poundsign or its empty
     if hashtag_input == "#" or hashtag_input == "":
       print("The hashtag must have charaters in it.")
@@ -192,11 +196,13 @@ def user_interface(twitter, restarted=False):
       tweet_list = twitter.tweet_search(hashtag_input)
       for tweet in tweet_list:
         print(tweet.tweet)
+
     #if everyint is fine, run function and print every tweet.
     else:
       tweet_list = twitter.tweet_search(hashtag_input)
       for tweet in tweet_list:
         print(tweet.tweet)
+    
   #if user does not use a or s, error
   else:
     print("\nIncorrect input.")
@@ -209,6 +215,41 @@ def user_interface(twitter, restarted=False):
     print("\nEnding Execution")
 
 
+# test_case() - Tests the add tweet function by making a list of the current tweets
+#               with the hashtag, adding the tweet and then searching for it again.
+#
+#   Parameters: 
+#     test_number - The number of the test that is tested.
+#     test_tweet - The contents of the tweet being added.
+#     test_hashtag - The hashtag of the tweet being added.
+def test_case(test_number, test_tweet, test_hashtag):
+  before_list = twitter.tweet_search(test_hashtag)
+  twitter.add_tweet(test_tweet, test_hashtag)
+  after_list = twitter.tweet_search(test_hashtag)
+
+  if len(before_list) < len(after_list):
+    print("Test", test_number, "passed.")
+  else:
+    print("Test", test_number, "failed.")
+
+  for tweet in after_list:
+    print(tweet.tweet)
+
+
+# test() - Runs the different test cases.
+#
+#   Parameters:
+#     twitter - Initializing the application.
+def test(twitter):
+  print("\nTesting the application.\n")
+  test_case(1, "This is a test tweet", "TESTHASHTAG")
+  test_case(2, "Another test tweet", "MYHASHTAG")
+  test_case(3, "Second tweet in myhashtag", "MYHASHTAG")
+  test_case(4, "Third tweet in myhashtag", "MYHASHTAG")
+
+
+
 if __name__ == "__main__":
   twitter = Hashing(INPUT_FILE)
+  #test(twitter)
   user_interface(twitter)
