@@ -23,7 +23,7 @@ def hashascii():
     for x in objectList:
         number = 0
         for charecter in x.hashtag:
-            number = number + ord(charecter)
+            number = number + ord(charecter.upper())
         number = number%mod
         x.number = number
         print(number)
@@ -96,4 +96,4 @@ def test3():
     writeTweet("blessed","There is so much good in the world")
     
 
-test3()
+test2()
